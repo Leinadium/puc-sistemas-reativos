@@ -18,7 +18,7 @@ caso, se o usuario paertar a chave 1 o programa deve voltar ao estado inicial
 #define POT        A0
 
 #define LOOP_DELAY 500
-#define LED_MOSTRAR_DELAY 1000
+#define LED_MOSTRAR_DELAY 500
 #define LEN_RESPOSTA 5
 
 int LEDS[] = {LED1, LED2, LED3};
@@ -37,6 +37,11 @@ bool stateMostrar;
 // globais para estado RECEBER
 int receberAtual;
 
+void geraNovaSequencia() {
+  for (int i = 0; i < LEN_RESPOSTA; i ++) {
+    respostaCorreta[i] = random(1, 4);
+  }
+}
 
 /** verifica os botoes. Devolve 0 se nada foi pressionado. Devole 1-3 caso seja pressionado */
 int recebeBotao() {
@@ -63,27 +68,27 @@ void irPara(int newState) {
     mostrarAtual = 0;
     lastMostrar = now;
     stateMostrar = false;
-    digitalWrite(LED1, LOW);
-    digitalWrite(LED2, LOW);
-    digitalWrite(LED3, LOW);
+    digitalWrite(LED1, HIGH);
+    digitalWrite(LED2, HIGH);
+    digitalWrite(LED3, HIGH);
+    geraNovaSequencia();
   }
 
   if (newState == 1) {    // receber
     receberAtual = 0;
-    digitalWrite(LED1, LOW);
-    digitalWrite(LED2, LOW);
-    digitalWrite(LED3, LOW);
-    // TODO
-  }
-  
-  if (newState == 2) {    // sucesso
     digitalWrite(LED1, HIGH);
     digitalWrite(LED2, HIGH);
     digitalWrite(LED3, HIGH);
   }
+  
+  if (newState == 2) {    // sucesso
+    digitalWrite(LED1, LOW);
+    digitalWrite(LED2, LOW);
+    digitalWrite(LED3, LOW);
+  }
 
   if (newState == 3) {    // erro
-    digitalWrite(LED1, HIGH);
+    digitalWrite(LED1, LOW);
   }
 
   state = newState;
@@ -95,18 +100,18 @@ void mostrar() {
   // unsigned long lastMostrar;
   // bool stateMostrar;
 
-  if (now - lastMostrar >= 1000) {
+  if (now - lastMostrar >= LED_MOSTRAR_DELAY) {
     if (!stateMostrar) {
       if (mostrarAtual >= LEN_RESPOSTA) {
         irPara(1);
         return;
       }
       // mostra o led
-      digitalWrite(LEDS[respostaCorreta[mostrarAtual] - 1], HIGH);
+      digitalWrite(LEDS[respostaCorreta[mostrarAtual] - 1], LOW);
     }
     else {
       // apaga o led
-      digitalWrite(LEDS[respostaCorreta[mostrarAtual] - 1], LOW);
+      digitalWrite(LEDS[respostaCorreta[mostrarAtual] - 1], HIGH);
       mostrarAtual++;  // aumenta o contador
     }
 
@@ -146,6 +151,7 @@ void setup() {
 
   last = millis();
   state = 0;
+  irPara(0);
 }
 
 void loop() {
