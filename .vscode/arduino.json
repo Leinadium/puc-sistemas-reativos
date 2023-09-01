@@ -1,0 +1,6 @@
+{
+    "board": "arduino:avr:uno",
+    "programmer": "arduinoisp",
+    "port": "COM5",
+    "sketch": "roda_cores\\roda_cores.ino"
+}
