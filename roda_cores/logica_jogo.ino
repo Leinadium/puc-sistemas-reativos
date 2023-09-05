@@ -34,6 +34,7 @@ int led_anterior = 0;           // 0 <= led_anterior < 12
 int leds_acertos = 0;           // quantidade de leds ja pressionados
 int delay_jogo = 0;
 
+// mantem o valor real dos leds
 bool leds[] = {              // estado dos leds
     false, false, false, false,
     false, false, false, false,
@@ -48,7 +49,6 @@ void mudar_estado(char novo_estado) {
 
     else if (novo_estado == E_DERROTA) {
         // apaga todos os leds, exceto o que errou
-        leds_acertos = 1;   // reinicia tudo pro inicio
         for (int i = 0; i < 12; i++) { 
             set_led(i, (i == led_agora));
             leds[i] = (i == led_agora); 
@@ -58,6 +58,7 @@ void mudar_estado(char novo_estado) {
     else if (novo_estado == E_INICIO) {
         // escolhe um novo led inicial
         // apaga todos os leds, exceto o do inicio
+        leds_acertos = 1;   // reinicia tudo pro inicio
         led_agora = random(0, 12);
         led_anterior = (led_agora - 1) % 12;
         for (int i = 0; i < 12; i++) { 
@@ -70,6 +71,7 @@ void mudar_estado(char novo_estado) {
 }
 
 void loop_jogo() {
+    // delay()
     if (delay_jogo > 0) {
       delay_jogo--;
       return;
@@ -79,13 +81,13 @@ void loop_jogo() {
         // acende todos os leds
         set_todos_leds(estado_led);
         estado_led = !estado_led;
-        delay_jogo = MAX_DELAY_JOGO;
+        delay_jogo = MAX_DELAY_JOGO;    // grande delay
     }
     else if ((estado == E_DERROTA ) || (estado == E_INICIO)) {
         // pisca so o led que está o led_agora
         set_led(led_agora, estado_led);
         estado_led = !estado_led;
-        delay_jogo = MAX_DELAY_JOGO;
+        delay_jogo = MAX_DELAY_JOGO;    // grande delay
     }
     else if (estado == E_JOGO) {
         // muda o led atual, e corrige o led anterior
@@ -93,7 +95,7 @@ void loop_jogo() {
         led_agora = (led_agora + 1) % 12;
         set_led(led_agora, !leds[led_agora]);
         set_led(led_anterior, leds[led_anterior]);
-        delay_jogo = MIN_DELAY_JOGO;
+        delay_jogo = MIN_DELAY_JOGO;    // delay padrão
     }
 }
 

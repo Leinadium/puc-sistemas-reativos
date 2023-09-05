@@ -14,33 +14,33 @@ volatile int q_pode_mudar = 0;     // tem que esperar MIN_LOOP para mudar
 volatile int loop_delay = 1;
 volatile int loop_q = 0;
 
-/** interface para mudar o loop do timer. Padrão -> 50 */
+
 void set_timer_loop(int q) {
     loop_delay = q;
 }
 
 /** roda a configuração das interrupções */
 void setup_interrupcao() {
-    // configura o timer (???)
+    // configura o timer (???) documentação do adriano confusa
     // TIMSK2 = (TIMSK2 & B11111110) | 0x01;
     // TCCR2B = (TCCR2B & B11111000) | 0x07;
 
-    // alguma documentação: http://www.gammon.com.au/interrupts
+    // alguma documentação: http://www.gammon.com.au/interrupts (não ajudou muito)
 
-    // https://forum.arduino.cc/t/arduino-timer-interrupt/37971/8
+    // https://forum.arduino.cc/t/arduino-timer-interrupt/37971/8   (a que melhor ajudou)
     TCCR2A = 0;                     // set entire TCCR2A register to 0
     TCCR2B = 1 << CS22 | 1 << CS21;
     TIMSK2 = 1 << TOIE2;              // Timer2 Overflow Interrupt Enable
     TCNT2 = 0;                      // reset timer
 
 
-    // configura o botao (?)
+    // configura o botao (?) documentação do adriano confusa
     pinMode(BOTAO, INPUT_PULLUP);
     // *digitalPinToPCMSK(BOTAO) |= bit (digitalPinToPCMSKbit(BOTAO));  // enable pin
     // PCIFR  |= bit (digitalPinToPCICRbit(BOTAO)); // clear any outstanding interrupt
     // PCICR  |= bit (digitalPinToPCICRbit(BOTAO)); // enable interrupt for the group
 
-    // https://www.electrosoftcloud.com/en/pcint-interrupts-on-arduino/
+    // https://www.electrosoftcloud.com/en/pcint-interrupts-on-arduino/ (a que melhor ajudou)
     PCICR  |= B00000010;         // We activate the interrupts of the PC port
     PCMSK1 |= B00000010;        // ativando a porta A1
 

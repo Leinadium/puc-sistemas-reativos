@@ -1,3 +1,16 @@
+/**
+ * Observação: a ideia original era evitar ter o vetor estados `bool estados[]`,
+ * e ao inves disso utilizar somente um inteiro `int v_leds` para armazenar 
+ * todo o estado dos leds.
+ * Porém, a operação final para salvar nas portas estava dando muitos problemas,
+ * por isso, afim de funcionar, foi utilizada a abordagem com o vetor de estados e com os
+ * 7 digitalWrites para uma varredura (ao inves de 3 digitalsWrites e um write nas 4 outras portas direto...)
+ * 
+ * Depois, estudar melhor o funcionamento do PORTB
+ * 
+ * O funcionamento original utilizando o int está no meu github, salvo.
+*/
+
 #include "controle_led.h"
 
 #define ENT1 11
