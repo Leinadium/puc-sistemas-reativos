@@ -16,8 +16,10 @@ void interrupcao_loop_timer() {
 }
 
 void interrupcao_botao_pressionado() {
-    set_todos_leds(false);
-    // botao_pressionado(); 
+    // set_todos_leds(false);
+    // set_led(1, true);
+    botao_pressionado(); 
+    // Serial.println("a");
 }
 
 
@@ -25,6 +27,7 @@ void interrupcao_botao_pressionado() {
 void setup() {
     setup_leds();
     setup_interrupcao();
+    Serial.begin(9600);
 }
 
 // loop principal

@@ -51,6 +51,7 @@ ISR (PCINT1_vect) {
     // se nao pode mudar, ignora
     if (q_pode_mudar > 0) return;
 
+    q_pode_mudar = MIN_LOOPS;
     botao_estado = !botao_estado;
     if (botao_estado) {
         interrupcao_botao_pressionado();
