@@ -1,25 +1,33 @@
 # include "controle_led.h"
+# include "logica_interrupcao.h"
+# include "logica_jogo.h"
 
-void setup() {
-    config_leds();
-}
+// contador para separar a varredura do loop do jogo
+volatile int q = 0;
 
-void loop() {
-    for (int i = 0; i < 12; i ++ ) {
-        muda_led(i, true);
-        
-        faz_varredura(0);
-        delay(5);
-        faz_varredura(1);
-        delay(5);
-        faz_varredura(2);
-        delay(5);
-        // muda_led(i, false);
+// separarando a varredura do jogo 
+void interrupcao_loop_timer() { 
+    faz_varredura();
+    q++;
+    if (q == 4) { 
+        loop_jogo();
+        q = 0;
     }
 }
 
-void pciSetup(byte pin) {
-    *digitalPinToPCMSK(pin) |= bit (digitalPinToPCMSKbit(pin));  // enable pin
-    PCIFR  |= bit (digitalPinToPCICRbit(pin)); // clear any outstanding interrupt
-    PCICR  |= bit (digitalPinToPCICRbit(pin)); // enable interrupt for the group
+void interrupcao_botao_pressionado() {
+    set_todos_leds(false);
+    // botao_pressionado(); 
+}
+
+
+// setup dos componentes
+void setup() {
+    setup_leds();
+    setup_interrupcao();
+}
+
+// loop principal
+void loop() {
+    // enter_sleep();
 }

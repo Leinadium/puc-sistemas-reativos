@@ -13,7 +13,7 @@ int ENTS[] = {ENT1, ENT2, ENT3, ENT4};
 int SAIS[] = {SAI1, SAI2, SAI3};
 
 // estado = [00, 03, 06, 09, 01, 04, 07, 10, 02, 05, 08, 11, --, --, --, --]
-int estado = 0x00;
+int state = 0x00;
 
 int i_varredura = 0;
 
@@ -21,14 +21,15 @@ void setup_leds() {
     int i;
     for (i = 0; i < 4; pinMode(ENTS[i++], OUTPUT)) { }
     for (i = 0; i < 3; pinMode(SAIS[i++], OUTPUT)) { }
+    set_todos_leds(false);
 }
 
 void set_led(int led, bool modo) {
-    estado &= (modo ? 0b1 : 0b0) << (led / 4  + (led % 4) * 4);
+    state &= (modo ? 0b1 : 0b0) << (led / 4  + (led % 4) * 4);
 }
 
 void set_todos_leds(bool modo) {
-    estado = modo ? 0xffff : 0x0000;
+    state = modo ? 0xffff : 0x0000;
 }
 
 /** Faz a proxima etapa da varredura.*/
@@ -39,7 +40,7 @@ void faz_varredura() {
     digitalWrite(SAIS[2], !(i_varredura == 2));
 
     // configura os ins
-    PORTB = 0x00f | (estado >> (4 * i_varredura));
+    PORTB = 0x00f | (state >> (4 * i_varredura));
 
     // configura para a proxima varredura
     i_varredura = (i_varredura + 1) % 3;

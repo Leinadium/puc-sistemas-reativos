@@ -26,70 +26,72 @@
 #define DELAY_JOGO 500
 #define DELAY_MOSTRAR 1000
 
-typedef char Estado;    // para a maquina de estado
-typedef bool ModoLed;   // para o controle dos leds
 
-Estado estado = E_INICIO;       // maquina de estado
-ModoLed estado_led = false;     // usar para piscar os leds
+char estado = E_INICIO;       // maquina de estado
+bool estado_led = false;     // usar para piscar os leds
 int led_agora = 0;              // 0 <= led_agora < 12
 int led_anterior = 0;           // 0 <= led_anterior < 12
 int leds_acertos = 0;           // quantidade de leds ja pressionados
 
-ModoLed leds[] = {              // estado dos leds
+bool leds[] = {              // estado dos leds
     false, false, false, false,
     false, false, false, false,
     false, false, false, false 
 };
 
 
-void mudar_estado(Estado novo_estado) {
-    if (novo_estado & E_VITORIA) {
-        // por enquanto sim
+void mudar_estado(char novo_estado) {
+    if (novo_estado == E_VITORIA) {
+        // por enquanto nada
     }
 
-    else if (novo_estado & (E_DERROTA | E_INICIO)) {
+    else if (novo_estado == (E_DERROTA | E_INICIO)) {
         // apaga todos os leds, exceto o que errou
         leds_acertos = 1;   // reinicia tudo pro inicio
-        for (int i = 0; i < 12; i++) { leds[i] = (i == led_agora); }
+        for (int i = 0; i < 12; i++) { 
+            set_led(i, (i == led_anterior));
+            leds[i] = (i == led_agora); 
+        }
     }
 
-    else if (novo_estado & E_INICIO) {
+    else if (novo_estado == E_INICIO) {
         // escolhe um novo led inicial
         // apaga todos os leds, exceto o do inicio
         led_agora = random(0, 12);
         led_anterior = (led_agora - 1) % 12;
-        for (int i = 0; i < 12; i++) { leds[i] = (i == led_agora); }
+        for (int i = 0; i < 12; i++) { 
+            set_led(i, (i == led_anterior));
+            leds[i] = (i == led_agora); 
+        }
     }
 
     estado = novo_estado;
 }
 
 void loop_jogo() {
-    // TODO: handle delays
-
-    if (estado & E_VITORIA) {
+    if (estado == E_VITORIA) {
         // acende todos os leds
         set_todos_leds(estado_led);
         estado_led = !estado_led;
-        delay(DELAY_MOSTRAR);
+        // delay(DELAY_MOSTRAR);
     }
     else if (estado & (E_DERROTA | E_INICIO)) {
         // pisca so o led que está o led_agora
         set_led(led_agora, estado_led);
         estado_led = !estado_led;
-        delay(DELAY_MOSTRAR);
+        // delay(DELAY_MOSTRAR);
     }
-    else if (estado & E_JOGO) {
+    else if (estado == E_JOGO) {
         // muda o led atual, e corrige o led anterior
         led_anterior = (led_agora - 1) % 12;
         set_led(led_agora, !leds[led_agora]);
         set_led(led_anterior, leds[led_anterior]);
-        delay(DELAY_JOGO)
+        // delay(DELAY_JOGO);
     }
 }
 
 void botao_pressionado() {
-    if (estado & E_JOGO) {
+    if (estado == E_JOGO) {
         if (leds[led_agora]) {  // errou
             mudar_estado(E_DERROTA);
         }
