@@ -1,5 +1,22 @@
-local dispatcher, player, shots, asteroids
+-- variaveis globais
+local dispatcher
+local player
+local shots
+local asteroids
+local gamestate
+
+-- (so para evitar ficar pegando love.graphics.getWidth() e getHeight() toda hora)
 local swidth, sheight
+
+function radiustopoints(r)
+    if r > 50 then
+        return 5
+    elseif r > 30 then
+        return 2
+    else
+        return 1
+    end
+end
 
 -- helper function: diz se existe uma colisao dada
 -- duas coordenadas e dois raios
@@ -61,8 +78,32 @@ function getasteroid(x, y, bearing, vel, radius)
     local sy = mv * math.sin(mb - math.pi / 2)
     local mout = false
 
+    -- asteroide bonitinho
+    local qsides = love.math.random(5, 10)
+    local vsides = {}
+    local function createsides()
+        for i = 1, qsides do
+            table.insert(
+                vsides,
+                mr * (0.7 + love.math.random() * 0.3)
+            )
+        end
+    end
+    createsides()
+
+    local function drawasteroid()
+        for i = 1, qsides do
+            local x1, y1, x2, y2
+            x1 = mx + vsides[i] * math.cos((i - 1) * 2 * math.pi / qsides)
+            y1 = my + vsides[i] * math.sin((i - 1) * 2 * math.pi / qsides)
+            x2 = mx + vsides[i % qsides + 1] * math.cos((i % qsides) * 2 * math.pi / qsides)
+            y2 = my + vsides[i % qsides + 1] * math.sin((i % qsides) * 2 * math.pi / qsides)
+            love.graphics.line(x1, y1, x2, y2)
+        end
+    end
+
     local function checkshots()
-        mout = shots.checkasteroid(mx, my, mr)
+        mout = shots.checkasteroid(mx, my, mr * 0.8)
     end
 
     return {
@@ -84,7 +125,7 @@ function getasteroid(x, y, bearing, vel, radius)
             doagainifoutofbounds(
                 function (xx, yy)
                     love.graphics.setColor(0.8, 0.8, 0.8)
-                    love.graphics.circle("line", mx, my, mr)
+                    drawasteroid()
                 end,
                 mx, my, mr, swidth, sheight
             )
@@ -151,7 +192,11 @@ function getasteroids()
         local toremove = {}
         for i = 1, #myasteroids do
             if myasteroids[i].getout() then
-                -- TODO: acertou! aumenta a pontuacao
+                -- aumenta a pontuacao do player
+                local p = radiustopoints(myasteroids[i].getr())
+                player.addpoints(p)
+                -- cria o texto
+                texts.spawn(myasteroids[i].getx(), myasteroids[i].gety(), tostring("+" .. tostring(p)))
                 -- pode nascer outros dois asteroides dependendo do tamanho do atual
                 if myasteroids[i].getr() > minradius then
                     spawnchildren(myasteroids[i])
@@ -162,6 +207,16 @@ function getasteroids()
         for i = 1, #toremove do
             table.remove(myasteroids, toremove[i] - i + 1)
         end
+    end
+
+    local function checkplayer(px, py, pr)
+        for i = 1, #myasteroids do
+            local ax, ay, ar = myasteroids[i].getx(), myasteroids[i].gety(), myasteroids[i].getr()
+            if genericcolision(px, py, pr, ax, ay, ar) then
+                return true
+            end
+        end
+        return false
     end
 
     local function update(dt)
@@ -191,10 +246,16 @@ function getasteroids()
             end
         end,
 
+        checkplayer = function (x, y, r) return checkplayer(x, y, r) end,
+
+        reset = function ()
+            myasteroids = {}
+            timer = 0
+            spawntimer = maxtimer
+        end,
+
         draw = function ()
             for i = 1, #myasteroids do myasteroids[i].draw() end
-            love.graphics.print(tostring(timer), 50, 120)
-            love.graphics.print(tostring(#myasteroids), 50, 130)
         end
     }
 end
@@ -255,7 +316,6 @@ function getshots()
 
         draw = function ()
             for i = 1, #myshots do myshots[i].draw() end
-            love.graphics.print(tostring(#myshots), 50, 70)
         end   
     }
 end
@@ -263,22 +323,24 @@ end
 function getshot(x, y, bearing, radius)
     local mx, my, mb, mr = x, y, bearing, radius
     local maxspeed = 500
+    local ttl = math.min(swidth, sheight) * 0.8 / maxspeed
 
     local sx = maxspeed * math.cos(mb - math.pi / 2)
     local sy = maxspeed * math.sin(mb - math.pi / 2)
     local isout = false
 
     local function checkisout()
-        if mx < 0 or mx > love.graphics.getWidth() or my < 0 or my > love.graphics.getHeight() then
+        if ttl <= 0 then
             isout = true
-            return
         end
     end
 
     return {
         update = function (dt)
+            ttl = ttl - dt
             mx = mx + sx * dt
             my = my + sy * dt
+            mx, my = wrapifoutofbound(mx, my, swidth, sheight)
             checkisout()
         end,
 
@@ -297,7 +359,7 @@ end
 
 function getplayer()
     local x, y = swidth / 2, sheight / 2    -- posicao
-    local sx, sy, sr = 0, 0, 0                 -- velocidade
+    local sx, sy, sr = 0, 0, 0              -- velocidade
     local acel, acelr = 0                   -- aceleracao
 
     local bearing = 0                       -- direcao (graus)
@@ -310,10 +372,22 @@ function getplayer()
 
     local radius = 20
     local shotradius = 3
-    local shotcooldown = 0.25
+    local shotcooldown = 0.20
+
+    local points = 0
+    local isdead = false              
+    local isenable = false
 
     local function update(dt)
-        -- atualiza shot
+        -- se estiver morto, nao faz nada
+        if isdead or not isenable then return end
+
+        ------------- COLISAO  -------------
+        if asteroids.checkplayer(x, y, radius * 0.7) then
+            gamestate.setstate("gameover")
+        end
+
+        -------------  SHOTS  -------------
         cooldown = cooldown + dt 
         if love.keyboard.isDown("space") and cooldown >= shotcooldown then
             shots.spawn(x, y, bearing, shotradius)
@@ -357,6 +431,19 @@ function getplayer()
     end
 
     return {
+        setenable = function (v) isenable = v end,
+        setdead = function (v) isdead = v end,
+
+        reset = function () 
+            x, y = swidth / 2, sheight / 2
+            sx, sy, sr = 0, 0, 0
+            acel, acelr = 0, 0
+            bearing = 0
+            cooldown = 0
+            points = 0
+            isdead = false
+        end,
+
         update = function (dt) return update(dt) end,
 
         updateco = function ()
@@ -368,10 +455,13 @@ function getplayer()
 
         getx = function () return x end,
         gety = function () return y end,
+        getpoints = function () return points end,
 
-        
+        addpoints = function (p) points = points + p end,
 
         draw = function ()
+            if not isenable then return end
+            
             local function drawplayer(xx, yy)
                 love.graphics.push()
                 -- roda em volta de (x, y)
@@ -380,28 +470,169 @@ function getplayer()
                 love.graphics.translate(-xx, -yy)
 
                 -- desenha o triangulo
-                love.graphics.setColor(1, 1, 1)
-                love.graphics.polygon("fill", {
+                if not isdead then
+                    love.graphics.setColor(1, 1, 1)
+                else
+                    love.graphics.setColor(1, 0.1, 0.1)
+                end
+                -- love.graphics.setColor(1, 1, 1)
+
+                love.graphics.polygon("line", {
                     xx, yy - radius, 
-                    xx + math.cos(math.pi / 6) * radius, yy + math.sin(math.pi / 6) * radius, 
+                    xx + math.cos(math.pi / 6) * radius * 0.8, yy + math.sin(math.pi / 6) * radius, 
                     xx, yy,
-                    xx - math.cos(math.pi / 6) * radius, yy + math.sin(math.pi / 6) * radius,
+                    xx - math.cos(math.pi / 6) * radius * 0.8, yy + math.sin(math.pi / 6) * radius,
                 })
                 love.graphics.pop()
             end
 
             doagainifoutofbounds(drawplayer, x, y, radius, swidth, sheight)
 
-            love.graphics.print(tostring(bearing), 50, 50)
-            
-            love.graphics.print(tostring(dispatcher.quantidade()), 50, 150)
-
-            love.graphics.print(tostring(sx), 350, 160)
-            love.graphics.print(tostring(sy), 350, 170)
-            love.graphics.print(tostring(sr), 350, 180)
+            -- love.graphics.print(tostring(points), 50, 50)
         end
     }
 end
+
+function gettext(x, y, s)
+    local mx, my, ms = x, y, s
+    local ttl = 1
+    local ydrift = 50
+
+    return {
+        update = function (dt)
+            ttl = ttl - dt
+            my = my - ydrift * dt
+        end,
+
+        getttl = function () return ttl end,
+
+        draw = function ()
+            love.graphics.setColor(1, 1, 1)
+            love.graphics.print(ms, mx, my)
+        end
+    }
+end
+
+function gettexts()
+    local texts = {}
+
+    local function removeouts()
+        local toremove = {}
+        for i = 1, #texts do
+            if texts[i].getttl() <= 0 then
+                table.insert(toremove, i)
+            end
+        end
+        for i = 1, #toremove do
+            table.remove(texts, toremove[i] - i + 1)
+        end
+    end
+
+    local function update(dt)
+        for i = 1, #texts do texts[i].update(dt) end
+        removeouts()
+    end
+
+    return {
+        spawn = function (x, y, s)
+            table.insert(texts,
+                gettext(x, y, s)
+            )
+        end,
+
+        update = function (dt) return update(dt) end,
+
+        updateco = function ()
+            while true do
+                dt = coroutine.yield()
+                update(dt)
+            end
+        end,
+
+        draw = function ()
+            for i = 1, #texts do texts[i].draw() end
+        end
+    }
+end
+
+function getgamestate()
+    local state = "menu"    -- menu | game | gameover
+
+    local function setstate(newstate)
+        if newstate == "game" then
+            -- reinicia tudo
+            love.math.setRandomSeed(love.timer.getTime())
+            player.setenable(true)
+            player.reset()
+            asteroids.reset()
+        elseif newstate == "gameover" then
+            player.setdead(true)
+        elseif newstate == "menu" then
+            player.setenable(false)
+        end
+        state = newstate
+    end
+
+    local function update(dt)
+        if state == "menu" then
+            if love.keyboard.isDown("return") then
+                setstate("game")
+            end
+        elseif state == "game" then
+            -- os outros updates estão rodando já
+        elseif state == "gameover" then
+            if love.keyboard.isDown("return") then
+                setstate("menu")
+            end
+        end
+    end
+
+    return {
+        setstate = function (s) return setstate(s) end,
+
+        update = function (dt) return update(dt) end,
+
+        updateco = function()
+            while true do
+                dt = coroutine.yield()
+                update(dt)
+            end
+        end,
+
+        draw = function ()
+            if state == "game" then
+                -- os outros draw estão rodando já
+            end
+            if state == "menu" then
+                love.graphics.setColor(1, 1, 1)
+                love.graphics.print(
+                    "Asteroids",
+                    swidth / 2 - 150, sheight / 2 - 100
+                )
+                love.graphics.print(
+                    "Pressione [ENTER] para comecar",
+                    swidth / 2 - 150, sheight / 2 - 50
+                )
+            end
+            if state == "gameover" then
+                love.graphics.setColor(1, 1, 1)
+                love.graphics.print(
+                    "Game Over",
+                    swidth / 2 - 150, sheight / 2 - 100
+                )
+                love.graphics.print(
+                    "Pontuacao: " .. tostring(player.getpoints()),
+                    swidth / 2 - 150, sheight / 2 - 75
+                )
+                love.graphics.print(
+                    "Pressione ENTER para voltar ao menu",
+                    swidth / 2 - 150, sheight / 2 - 50
+                )
+            end
+        end
+    }
+end
+
 
 -- Dispatcher
 -- implementação de loop de "eventos"
@@ -439,27 +670,34 @@ function love.load(arg)
     swidth, sheight = love.graphics.getDimensions()
 
     dispatcher = getdispatcher()
+    gamestate = getgamestate()
     player = getplayer()
     asteroids = getasteroids()
     shots = getshots()
+    texts = gettexts()
 
+    dispatcher.add(gamestate.updateco)
     dispatcher.add(player.updateco)
     dispatcher.add(asteroids.updateco)
     dispatcher.add(shots.updateco)
+    dispatcher.add(texts.updateco)
 
-    love.math.setRandomSeed(love.timer.getTime())
+    gamestate.setstate("menu")  -- para comecar tudo
 end
 
 function love.draw()
+    gamestate.draw()
     player.draw()
     asteroids.draw()
     shots.draw()
+    texts.draw()
 end
 
 function love.update(dt)
     -- player.update(dt)
     -- asteroids.update(dt)
     -- shots.update(dt)
+    -- texts.update(dt)
     
     dispatcher.process(dt)
 end
