@@ -91,13 +91,13 @@ function getasteroid(x, y, bearing, vel, radius)
     end
     createsides()
 
-    local function drawasteroid()
+    local function drawasteroid(xx, yy)
         for i = 1, qsides do
             local x1, y1, x2, y2
-            x1 = mx + vsides[i] * math.cos((i - 1) * 2 * math.pi / qsides)
-            y1 = my + vsides[i] * math.sin((i - 1) * 2 * math.pi / qsides)
-            x2 = mx + vsides[i % qsides + 1] * math.cos((i % qsides) * 2 * math.pi / qsides)
-            y2 = my + vsides[i % qsides + 1] * math.sin((i % qsides) * 2 * math.pi / qsides)
+            x1 = xx + vsides[i] * math.cos((i - 1) * 2 * math.pi / qsides)
+            y1 = yy + vsides[i] * math.sin((i - 1) * 2 * math.pi / qsides)
+            x2 = xx + vsides[i % qsides + 1] * math.cos((i % qsides) * 2 * math.pi / qsides)
+            y2 = yy + vsides[i % qsides + 1] * math.sin((i % qsides) * 2 * math.pi / qsides)
             love.graphics.line(x1, y1, x2, y2)
         end
     end
@@ -125,7 +125,7 @@ function getasteroid(x, y, bearing, vel, radius)
             doagainifoutofbounds(
                 function (xx, yy)
                     love.graphics.setColor(0.8, 0.8, 0.8)
-                    drawasteroid()
+                    drawasteroid(xx, yy)
                 end,
                 mx, my, mr, swidth, sheight
             )
