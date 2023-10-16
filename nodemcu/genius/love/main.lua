@@ -8,16 +8,16 @@ local g
 
 function love.load(arg)
     game.init()
-    g = game.getgame()
-    g.setup()
+    g = game.Game:new()
+    g:setup()
 end
 
 function love.draw()
-    g.draw()
+    g:draw()
 end
 
 function love.update(dt)
-    g.update(dt)
+    g:update(dt)
 end
 
 function love.quit()
