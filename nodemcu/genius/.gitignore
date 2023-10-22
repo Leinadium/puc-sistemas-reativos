@@ -1,1 +1,3 @@
 love-build/
+*.jar
+*.Log
