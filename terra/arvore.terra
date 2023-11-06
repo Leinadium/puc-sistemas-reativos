@@ -1,0 +1,86 @@
+#include "/home/terra/TerraNG/terra/TerraNet.defs"
+
+var ushort nodeId = getNodeID();
+pktype usrMsg from radioMsg with
+  var ubyte[4] d8;
+  var ushort[4] d16;
+  var ulong[2] d32;
+end
+
+var usrMsg sndData;
+var usrMsg recData;
+var ubyte count;
+var ushort delay;
+var ushort qtdNodes = 15;
+
+var ushort meuTarget;
+var ushort bcReceived = 0;
+
+sndData.type = 1;
+sndData.source = nodeId;
+
+if nodeId == 11 then
+  // envia o flood inicial
+  bcReceived = 1;
+  meuTarget = 1;
+  sndData.target = BROADCAST;
+  sndData.source = nodeId;
+  sndData.d32[0] = 0;
+  emit SEND(sndData);
+  await SEND_DONE;
+else
+  // configura o delay inicial
+  if nodeId == 12 then delay = 1 end;
+  if nodeId == 13 then delay = 2 end;
+  if nodeId == 14 then delay = 3 end;
+  if nodeId == 21 then delay = 4 end;
+  if nodeId == 22 then delay = 5 end;
+  if nodeId == 23 then delay = 6 end;
+  if nodeId == 24 then delay = 7 end;
+  if nodeId == 31 then delay = 8 end;
+  if nodeId == 32 then delay = 9 end;
+  if nodeId == 33 then delay = 10 end;
+  if nodeId == 34 then delay = 11 end;
+  if nodeId == 41 then delay = 12 end;
+  if nodeId == 42 then delay = 13 end;
+  if nodeId == 43 then delay = 14 end;
+  if nodeId == 44 then delay = 15 end;
+end
+
+par do
+  loop do
+    recData = await RECEIVE;
+    // se for um primeiro broadcast, armazena o target
+    if (recData.target == BROADCAST) then
+      if (bdReceived == 0) then
+        // armazena o target
+        meuTarget = recData.source;
+        bcReceived = 1;
+        // repassa o broadcast
+        await (delay)s
+        recData.source = nodeId;
+        emit SEND(recData);
+        await SEND_DONE;
+      end
+    // senao, só repassa a informacao
+    else
+      recData.target = sndData.target;
+      emit SEND(recData);
+      await SEND_DONE;
+    end
+  end
+with
+  await (delay)s;
+  loop do
+    await (qtdNodes)s;
+    if (bcReceived == 1) then
+      emit REQ_TEMP();
+      sndData.target = meuTarget;
+      sndData.d16[0] = await TEMP;
+      sndData.d8[0] = count;
+      emit SEND(sndData);
+      await SEND_DONE;
+      inc count;
+    end
+  end
+end
