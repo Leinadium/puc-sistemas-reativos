@@ -4,7 +4,7 @@ local note = require("note")
 local M = {}
 
 Track = {
-    notes = {},
+    notes = {},     -- lista de `note`s
     currentseg = 0,
     currentbeat = 0,
     period = 0,
