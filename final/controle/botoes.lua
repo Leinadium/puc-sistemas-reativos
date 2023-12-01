@@ -61,7 +61,7 @@ function Botoes:beep(freq, duration)
     tmr.create():alarm(duration, tmr.ALARM_SINGLE, function() pwm.stop(self.buzzer) end)
 end
 
-function Botoes:addcbclient(self, cbclient)
+function Botoes:addcbclient(cbclient)
     self.cbclient = cbclient
 end
 

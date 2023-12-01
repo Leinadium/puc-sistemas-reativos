@@ -1,7 +1,7 @@
-local gpio = require("gpio")
-local pwm = require("pwm")
-local tmr = require("tmr")
-local mqtt = require("mqtt")
+-- local gpio = require("gpio")
+-- local pwm = require("pwm")
+-- local tmr = require("tmr")
+-- local mqtt = require("mqtt")
 
 -----------------------------------------------------------------------
 Note = {
@@ -281,7 +281,7 @@ Botoes = {
     buzzer = 7,
     debaucingTime = 100,
     bt = {},
-    cbclient = nil,
+    cbclient = function() end,
     mapping = {
         [1] = 2, -- UL,
         [2] = 3, -- UR,
@@ -334,8 +334,8 @@ function Botoes:beep(freq, duration)
     tmr.create():alarm(duration, tmr.ALARM_SINGLE, function() pwm.stop(self.buzzer) end)
 end
 
-function Botoes:addcbclient(self, cbclient)
-    self.cbclient = cbclient
+function Botoes:addcb(cb)
+    self.cbclient = cb
 end
 
 function Botoes:cbbotao(tx)
@@ -349,27 +349,27 @@ end
 -- controle do guitar hero
 -----------------------------------------------------------------------
 -----------------------------------------------------------------------
-local game = require "game"
-local client = require "client"
-local botoes = require "botoes"
-
 -- criando as variaveis
-local game = game.Game:new()
-local client = client.Client:new()
-local botoes = botoes.Botoes:new()
+local function main()
+    local game = Game:new()
+    local client = Client:new()
+    local botoes = Botoes:new()
 
--- ligando os callbacks
-game:addcbs(
-    function(slot) client:hit(slot) end,        -- hitcb
-    function(slot) client:miss(slot) end,       -- misscb
-    function() botoes:beep(440, 0.1) end        -- beatcb
-)
+    -- ligando os callbacks
+    game:addcbs(
+        function(slot) client:hit(slot) end,        -- hitcb
+        function(slot) client:miss(slot) end,       -- misscb
+        function() botoes:beep(440, 0.1) end        -- beatcb
+    )
 
-botoes:addcbclient(
-    function(slot) game:setpressed(slot) end    -- cbbotao
-)
+    botoes:addcb(
+        function(slot) game:setpressed(slot) end    -- cbbotao
+    )
 
-client:init(
-    function(period, notes, timestamp) game:reset(notes, period, timestamp) end, -- configcb
-    function() game:stop() end                                                  -- stopcb
-)
+    client:init(
+        function(period, notes, timestamp) game:reset(notes, period, timestamp) end, -- configcb
+        function() game:stop() end                                                  -- stopcb
+    )
+end
+
+main()
