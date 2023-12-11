@@ -6,8 +6,8 @@ local tmr = require("tmr")
 Client = {
     meuid = "controle-asteroid-",
     topico = 'asteroid',
-    host = '10.1.1.99',    -- 139.82.100.100
-    port = 1883,            -- 7981
+    host = '139.82.100.100',    -- 139.82.100.100
+    port = 7981,            -- 7981
     m = mqtt.Client,
     ident = '',
 }

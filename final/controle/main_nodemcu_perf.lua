@@ -1,7 +1,7 @@
--- local gpio = require("gpio")
--- local pwm = require("pwm")
--- local tmr = require("tmr")
--- local mqtt = require("mqtt")
+local gpio = require("gpio")
+local pwm = require("pwm")
+local tmr = require("tmr")
+local mqtt = require("mqtt")
 
 -----------------------------------------------------------------------
 local function getnote(beat, slot)

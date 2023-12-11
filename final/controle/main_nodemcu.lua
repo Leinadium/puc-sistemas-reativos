@@ -168,8 +168,8 @@ end
 Client = {
     meuid = "controle-guitarhero",
     topico = 'guitarhero',
-    host = '10.1.1.99',
-    port = 1883,
+    host = '139.82.100.100',
+    port = 7981,
     m = mqtt.Client,
     configcb = function(period, notes, timestamp) end,
     stopcb = function() end,
@@ -350,7 +350,7 @@ end
 -----------------------------------------------------------------------
 -----------------------------------------------------------------------
 -- criando as variaveis
-local function main()
+function main()
     local game = Game:new()
     local client = Client:new()
     local botoes = Botoes:new()

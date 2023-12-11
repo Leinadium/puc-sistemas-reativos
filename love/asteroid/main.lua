@@ -322,7 +322,7 @@ end
 
 function getshot(x, y, bearing, radius)
     local mx, my, mb, mr = x, y, bearing, radius
-    local maxspeed = 500
+    local maxspeed = 800
     local ttl = math.min(swidth, sheight) * 0.8 / maxspeed
 
     local sx = maxspeed * math.cos(mb - math.pi / 2)
@@ -666,7 +666,20 @@ function getdispatcher()
     }
 end
 
+function love.keypressed(key)
+    -- se for f11, tela cheia
+     if key == "f11" then
+        love.window.setFullscreen(not love.window.getFullscreen())
+        swidth, sheight = love.graphics.getDimensions()
+    end
+end
+
+function love.resize(w, h)
+    swidth, sheight = w, h
+end
+
 function love.load(arg)
+    love.window.setMode(800, 600, {resizable = true})
     swidth, sheight = love.graphics.getDimensions()
 
     dispatcher = getdispatcher()

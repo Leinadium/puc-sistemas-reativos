@@ -1,8 +1,8 @@
 local wifi = require('wifi')
 
 WIFICONF = {
-    ssid = "",      -- "Reativos"
-    pwd = "",       -- "reativos"
+    ssid = "Reativos",      -- "Reativos"
+    pwd = "reativos",       -- "reativos"
     save = false,
     got_ip_cb = function (con)
         print (con.IP)

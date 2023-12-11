@@ -402,6 +402,7 @@ local function getplayer(id)
         ------------- COLISAO  -------------
         if asteroids.checkplayer(x, y, radius * 0.7) then
             -- gamestate.setstate("gameover")
+            sx, sy, sr = 0, 0, 0
             isdead = true
         end
 
@@ -797,8 +798,8 @@ end
 local function getcontroles()
     local meuid = "asteroid-love"
     local topico = "asteroid"
-    local host = "10.1.1.99"
-    local port = 1883
+    local host = "139.82.100.100"
+    local port = 7981
     local mclient = {}
     local playerids = {}
 
